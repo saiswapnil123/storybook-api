@@ -1,0 +1,333 @@
+openapi: 3.0.3
+
+info:
+  title: Storybook API
+  description: API for AI Personalized Storybook Platform
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Development
+
+tags:
+  - name: Health
+  - name: Templates
+  - name: Orders
+  - name: Payments
+  - name: Admin
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      responses:
+        "200":
+          description: API is running
+
+  /templates:
+    get:
+      tags:
+        - Templates
+      summary: Get all story templates
+      responses:
+        "200":
+          description: List of templates
+
+  /templates/{templateId}:
+    get:
+      tags:
+        - Templates
+      summary: Get template details
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template details
+
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create a new storybook order
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - storyType
+                - childPhoto
+                - childName
+                - age
+                - gender
+                - email
+                - phone
+                - addressLine1
+                - city
+                - state
+                - pincode
+
+              properties:
+                storyType:
+                  type: string
+                  enum:
+                    - TEMPLATE
+                    - CUSTOM
+
+                templateId:
+                  type: string
+                  nullable: true
+                  example: tpl_001
+
+                customStory:
+                  type: string
+                  format: binary
+                  description: Required only for CUSTOM story type
+
+                childPhoto:
+                  type: string
+                  format: binary
+
+                childName:
+                  type: string
+
+                age:
+                  type: integer
+
+                gender:
+                  type: string
+                  enum:
+                    - Male
+                    - Female
+                    - Other
+
+                email:
+                  type: string
+                  format: email
+
+                phone:
+                  type: string
+
+                addressLine1:
+                  type: string
+
+                addressLine2:
+                  type: string
+
+                city:
+                  type: string
+
+                state:
+                  type: string
+
+                pincode:
+                  type: string
+
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderCreatedResponse"
+
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order details
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+
+  /orders/{orderId}/payment:
+    post:
+      tags:
+        - Payments
+      summary: Create payment order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Razorpay order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /payments/webhook:
+    post:
+      tags:
+        - Payments
+      summary: Payment webhook
+      responses:
+        "200":
+          description: Webhook processed
+
+  /admin/orders:
+    get:
+      tags:
+        - Admin
+      summary: Get all orders
+      responses:
+        "200":
+          description: Orders fetched successfully
+
+  /admin/orders/{orderId}:
+    get:
+      tags:
+        - Admin
+      summary: Get order details
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order details
+
+  /admin/orders/{orderId}/status:
+    patch:
+      tags:
+        - Admin
+      summary: Update order status
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - status
+
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - PAYMENT_PENDING
+                    - PAID
+                    - GENERATING_STORY
+                    - GENERATING_IMAGES
+                    - QUALITY_CHECK
+                    - PDF_GENERATED
+                    - PRINTING
+                    - SHIPPED
+                    - DELIVERED
+                    - CANCELLED
+
+      responses:
+        "200":
+          description: Status updated
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+
+        message:
+          type: string
+
+        data:
+          type: object
+          nullable: true
+
+        meta:
+          type: object
+          nullable: true
+
+    OrderCreatedResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                  example: ord_123456
+
+    OrderResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                orderId:
+                  type: string
+
+                status:
+                  type: string
+
+                estimatedDelivery:
+                  type: string
+                  format: date
+
+                paymentStatus:
+                  type: string
+
+                trackingNumber:
+                  type: string
+                  nullable: true
+
+    PaymentResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                paymentProvider:
+                  type: string
+                  example: razorpay
+
+                orderId:
+                  type: string
+
+                amount:
+                  type: number
+
+                currency:
+                  type: string
+
+                paymentUrl:
+                  type: string
