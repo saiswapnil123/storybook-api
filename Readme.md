@@ -84,7 +84,7 @@ cp .env.example .env
 Generate the Prisma Client
 
 ```bash
-npx generate
+npx prisma generate
 ```
 ---
 
