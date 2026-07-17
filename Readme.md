@@ -81,6 +81,11 @@ Create your environment file.
 cp .env.example .env
 ```
 
+Generate the Prisma Client
+
+```bash
+npx generate
+```
 ---
 
 ## ▶️ Running Locally
