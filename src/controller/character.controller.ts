@@ -1,6 +1,6 @@
 import multer from 'multer';
 import { Request, Response } from 'express';
-import { createCharacter } from '../service/character.service.js';
+import { createCharacter, getCharacter } from '../service/character.service.js';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -69,4 +69,21 @@ export const createCharacterHandler = async (req: Request, res: Response): Promi
   });
 
   return res.status(result.success ? 201 : 500).json(result);
+};
+
+export const getCharacterHandler = async (req: Request, res: Response): Promise<Response> => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Character id is required',
+      data: null,
+      meta: null,
+    });
+  }
+
+  const result = await getCharacter(id);
+
+  return res.status(result.success ? 200 : (result.message === 'Character not found' ? 404 : 500)).json(result);
 };

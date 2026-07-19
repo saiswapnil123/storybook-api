@@ -65,12 +65,13 @@ export const createCharacter = async (input: CreateCharacterInput) => {
       success: true,
       message: 'Character created successfully',
       data: {
-        character: result.character,
-        image: {
-          id: result.characterImage.id,
-          imageUrl: result.characterImage.imageUrl,
-          s3Key: uploadResult.data.key,
-        },
+        orderId: result.character.orderId,
+        name: result.character.name,
+        gender: result.character.gender,
+        age: result.character.age,
+        hobbies: result.character.hobbies,
+        storyRole: result.character.storyRole,
+        customMessage: result.character.customMessage,
       },
       meta: null,
     };
@@ -80,6 +81,55 @@ export const createCharacter = async (input: CreateCharacterInput) => {
     return {
       success: false,
       message: 'Failed to create character',
+      data: null,
+      meta: null,
+    };
+  }
+};
+
+export const getCharacter = async (id: string) => {
+  try {
+    const character = await prisma.character.findUnique({
+      where: { id },
+      include: { images: true },
+    });
+
+    if (!character) {
+      return {
+        success: false,
+        message: 'Character not found',
+        data: null,
+        meta: null,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Character fetched successfully',
+      data: {
+        id: character.id,
+        orderId: character.orderId,
+        name: character.name,
+        gender: character.gender,
+        age: character.age,
+        hobbies: character.hobbies,
+        storyRole: character.storyRole,
+        customMessage: character.customMessage,
+        createdAt: character.createdAt,
+        images: character.images.map((img) => ({
+          id: img.id,
+          imageUrl: img.imageUrl,
+          createdAt: img.createdAt,
+        })),
+      },
+      meta: null,
+    };
+  } catch (error) {
+    logger.error({ error }, 'Failed to fetch character');
+
+    return {
+      success: false,
+      message: 'Failed to fetch character',
       data: null,
       meta: null,
     };
